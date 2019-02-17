@@ -43,4 +43,5 @@ $RECYCLE.BIN/
 
 target
 tokens
+logFiles
 src/main/resources/credentials.json

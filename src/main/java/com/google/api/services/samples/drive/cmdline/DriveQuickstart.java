@@ -15,6 +15,9 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class DriveQuickstart {
+	private static Logger logger = LoggerFactory.getLogger(DriveQuickstart.class);
+
     private static final String APPLICATION_NAME = "Google Drive API Java Quickstart";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -61,20 +66,32 @@ public class DriveQuickstart {
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
-        // Print the names and IDs for up to 10 files.
+        
+        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
+        List<File> listFoldersInRootResults = query.listFoldersInRoot();
+        outputListOfFileResults(listFoldersInRootResults);
+		List<File> sanityCheckResults = sanityCheck(service);
+        outputListOfFileResults(sanityCheckResults);
+	}
+    
+	private static List<File> sanityCheck(Drive service) throws IOException {
+		// Print the names and IDs for up to 10 files.
         FileList result = service.files().list()
                 .setPageSize(10)
                 .setFields("nextPageToken, files(id, name)")
                 .execute();
         List<File> files = result.getFiles();
+        return files;
+	}
+	
+    private static void outputListOfFileResults(List<File> files) {
         if (files == null || files.isEmpty()) {
-            System.out.println("No files found.");
+        	logger.info("No files found.");
         } else {
-            System.out.println("Files:");
+        	logger.info("Files:");
             for (File file : files) {
-                System.out.printf("%s (%s)\n", file.getName(), file.getId());
+            	logger.info(String.format("%s (%s)", file.getName(), file.getId()));
             }
 		}
-	}
+    }
 }
