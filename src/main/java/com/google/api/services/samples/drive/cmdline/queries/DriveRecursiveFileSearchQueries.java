@@ -16,44 +16,35 @@ public class DriveRecursiveFileSearchQueries {
 		this.service = service;
 	}
 
-	public void test() throws Exception {
-//	    Node node = new Node();
-//	    node.nodeLevel = 0;
-//	    node.itemName = "Be40-notes";
-
-		findAllParentDirectories(service, "Be40-notes"); 
-	}
-
 	public static class Node {
-//	    public List<Node> childNodes = new ArrayList<Node>(); // TODO, rename this, because it's actually the "parent nodes" - 
-//	    // ie, we are doing a reverse tree, starting at the file/item and working our way up through the parents/paths to get to the root node.
 		public Integer nodeLevel;
 		public File currentItem;
-		public Node nextItem;
+		public List<Node> parentItems = new ArrayList<Node>();
 	}
 
-	private boolean findAllParentDirectories(Drive service, String fileSearch) throws Exception {
+	public List<Node> findAllParentDirectories(String fileNameToSearch) throws IOException {
+		List<Node> returnNodeList = new ArrayList<Node>(); 
 		File rootFolder = service.files().get("root").setFields("id, name").execute();
 
-		FileList result = service.files().list().setQ(String.format("name = '%s' and trashed = false", fileSearch))
+		FileList result = service.files().list().setQ(String.format("name = '%s' and trashed = false", fileNameToSearch))
 				.setSpaces("drive").setFields("nextPageToken, files(id, name, parents)").execute();
 
 		List<File> searchResults = result.getFiles();
-		List<Node> nodeList = new ArrayList<Node>(); 
 
 		if (searchResults != null && !searchResults.isEmpty()) {
 			for (File searchResult : searchResults) {
 				Node rootNode = new Node();
 				rootNode.currentItem = searchResult;
+				rootNode.nodeLevel = 0;
 				reverseFileSearch(rootFolder, rootNode);
-				nodeList.add(rootNode);
+				returnNodeList.add(rootNode);
 			}
 		}
 
-		return true;
+		return returnNodeList;
 	}
 
-	private void reverseFileSearch(File rootFolder, Node node) throws Exception {
+	private void reverseFileSearch(File rootFolder, Node node) throws IOException {
 		File searchResult = node.currentItem;
 
 		for (String parentFolderId : searchResult.getParents()) {
@@ -66,24 +57,15 @@ public class DriveRecursiveFileSearchQueries {
 			System.out.println("parentFolderName " + parentFolderName);
 
 			Node nextNode = new Node();
-			node.nextItem = nextNode;
+			node.parentItems.add(nextNode);
 			nextNode.currentItem = parentFolder;
+			nextNode.nodeLevel = node.nodeLevel + 1;
 
 			reverseFileSearch(rootFolder, nextNode);
-
-			/*
-			 * if (parentFolderName.equals(nextParentNameInQueue)) { boolean found =
-			 * recur3(service, queue, actualResults);
-			 * 
-			 * if (found) { actualResults.add(searchResult); }
-			 * 
-			 * return found; } else if (rootFolder.getId().equals(parentFolder.getId())) {
-			 * actualResults.add(searchResult); oneOfParentsIsRoot = true; }
-			 */
 		}
 	}
 
-	public boolean pathExistsFromFileToRoot(Queue<String> queue, List<File> actualResults) throws IOException {
+	public boolean pathExistsFromFileToRoot(Queue<String> queue, List<File> actualFileResults) throws IOException {
 		File rootFolder = service.files().get("root").setFields("id, name").execute();
 
 		String searchFolderName = queue.poll();
@@ -103,15 +85,15 @@ public class DriveRecursiveFileSearchQueries {
 					String parentFolderName = parentFolder.getName();
 
 					if (parentFolderName.equals(nextParentNameInQueue)) {
-						boolean found = pathExistsFromFileToRoot(queue, actualResults);
+						boolean found = pathExistsFromFileToRoot(queue, actualFileResults);
 
 						if (found) {
-							actualResults.add(searchResult);
+							actualFileResults.add(searchResult);
 						}
 
 						return found;
 					} else if (rootFolder.getId().equals(parentFolder.getId())) {
-						actualResults.add(searchResult);
+						actualFileResults.add(searchResult);
 						oneOfParentsIsRoot = true;
 					}
 				}

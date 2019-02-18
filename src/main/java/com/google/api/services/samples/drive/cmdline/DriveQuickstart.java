@@ -80,9 +80,10 @@ public class DriveQuickstart {
 //        outputListOfFileResults(listFoldersInRootResults);
         
 		DriveRecursiveFileSearchQueries recursiveSearch = new DriveRecursiveFileSearchQueries(service);
-		checkFilePath_1(recursiveSearch);
-		checkFilePath_2(recursiveSearch);
-		checkFilePath_3(recursiveSearch);
+//		checkFilePath_1(recursiveSearch);
+//		checkFilePath_2(recursiveSearch);
+//		checkFilePath_3(recursiveSearch);
+		recursiveSearch.findAllParentDirectories("Be40-notes");
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
