@@ -14,7 +14,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.samples.drive.cmdline.queries.DriveBasicReadQueries;
+import com.google.api.services.samples.drive.cmdline.queries.DriveRecursiveFileSearchQueries;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class DriveQuickstart {
 	private static Logger logger = LoggerFactory.getLogger(DriveQuickstart.class);
@@ -68,13 +71,18 @@ public class DriveQuickstart {
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         
-		List<File> sanityCheckResults = sanityCheck(service);
-        outputListOfFileResults(sanityCheckResults);
+//		List<File> sanityCheckResults = sanityCheck(service);
+//        outputListOfFileResults(sanityCheckResults);
 
-        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
+//        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
         
-        List<File> listFoldersInRootResults = query.listFoldersInRoot();
-        outputListOfFileResults(listFoldersInRootResults);        
+//        List<File> listFoldersInRootResults = query.listFoldersInRoot();
+//        outputListOfFileResults(listFoldersInRootResults);
+        
+		DriveRecursiveFileSearchQueries recursiveSearch = new DriveRecursiveFileSearchQueries(service);
+		checkFilePath_1(recursiveSearch);
+		checkFilePath_2(recursiveSearch);
+		checkFilePath_3(recursiveSearch);
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
@@ -97,4 +105,58 @@ public class DriveQuickstart {
             }
 		}
     }
+    
+	public static void checkFilePath_1(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+		Queue<String> queue = new LinkedList<String>();
+		List<File> actualResults = new LinkedList<File>();
+		queue.offer("Be40-notes");
+		queue.offer("Docs");
+		queue.offer("CAE Simuflite Beechjet");
+		queue.offer("Beechjet");
+		queue.offer("DDA");
+		queue.offer("CFI");
+		queue.offer("Flying");
+		boolean found = recursiveSearch.pathExistsFromFileToRoot(queue, actualResults);
+
+		for (File file : actualResults) {
+			logger.info("file " + file.getName());
+		}
+
+		logger.info("found " + found);
+	}
+
+	public static void checkFilePath_2(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+		Queue<String> queue = new LinkedList<String>();
+		List<File> actualResults = new ArrayList<File>();
+		queue.offer("Be40-notes");
+		queue.offer("Docs");
+		queue.offer("CAE Simuflite Beechjet");
+		queue.offer("Beechjet");
+		queue.offer("Asus stuff");
+
+		boolean found = recursiveSearch.pathExistsFromFileToRoot(queue, actualResults);
+
+		for (File file : actualResults) {
+			logger.info("file " + file.getName());
+		}
+
+		logger.info("found " + found);
+	}
+
+	private static void checkFilePath_3(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException { // this points to the same file as in
+														// doTheRecursion4
+		Queue<String> queue = new LinkedList<String>();
+		List<File> actualResults = new ArrayList<File>();
+		queue.offer("Be40-notes");
+		queue.offer("past-safety-messages");
+		queue.offer("Flight club");
+
+		boolean found = recursiveSearch.pathExistsFromFileToRoot(queue, actualResults);
+
+		for (File file : actualResults) {
+			logger.info("file " + file.getName());
+		}
+
+		logger.info("found " + found);
+	}
 }
