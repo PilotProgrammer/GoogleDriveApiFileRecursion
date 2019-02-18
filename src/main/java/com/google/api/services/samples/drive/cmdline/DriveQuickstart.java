@@ -14,6 +14,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.samples.drive.cmdline.queries.DriveBasicReadQueries;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,11 +68,13 @@ public class DriveQuickstart {
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         
-        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
-        List<File> listFoldersInRootResults = query.listFoldersInRoot();
-        outputListOfFileResults(listFoldersInRootResults);
 		List<File> sanityCheckResults = sanityCheck(service);
         outputListOfFileResults(sanityCheckResults);
+
+        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
+        
+        List<File> listFoldersInRootResults = query.listFoldersInRoot();
+        outputListOfFileResults(listFoldersInRootResults);        
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
@@ -86,7 +89,7 @@ public class DriveQuickstart {
 	
     private static void outputListOfFileResults(List<File> files) {
         if (files == null || files.isEmpty()) {
-        	logger.info("No files found.");
+        	logger.info("No results.");
         } else {
         	logger.info("Files:");
             for (File file : files) {
