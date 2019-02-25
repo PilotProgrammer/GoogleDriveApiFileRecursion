@@ -79,12 +79,12 @@ public class DriveRecursiveFileSearchQueries {
 
 		File rootFolder = service.files().get("root").setFields("id, name").execute();
 
-		String searchFolderName = queue.poll();
+		String searchItemName = queue.poll();
 		String nextParentNameInQueue = queue.peek();
 		boolean oneOfParentsIsRoot = false;
 
 		FileList result = service.files().list()
-				.setQ(String.format("name = '%s' and trashed = false", searchFolderName)).setSpaces("drive")
+				.setQ(String.format("name = '%s' and trashed = false", searchItemName)).setSpaces("drive")
 				.setFields("nextPageToken, files(id, name, parents)").execute();
 
 		List<File> searchResults = result.getFiles();
