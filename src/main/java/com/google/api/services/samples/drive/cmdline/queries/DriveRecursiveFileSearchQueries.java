@@ -4,6 +4,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +18,11 @@ public class DriveRecursiveFileSearchQueries {
 	private static Logger logger = LoggerFactory.getLogger(DriveRecursiveFileSearchQueries.class);
 
 	protected Drive service;
+	protected File rootFolder;
 
-	public DriveRecursiveFileSearchQueries(Drive service) {
+	public DriveRecursiveFileSearchQueries(Drive service) throws IOException {
 		this.service = service;
+		rootFolder = service.files().get("root").setFields("id, name").execute();
 	}
 
 	public static class Node {
@@ -28,9 +31,9 @@ public class DriveRecursiveFileSearchQueries {
 		public List<Node> parentItems = new ArrayList<Node>();
 	}
 
+	// TODOGG rename this method
 	public List<Node> findAllParentDirectories(String fileNameToSearch) throws IOException {
 		List<Node> returnNodeList = new ArrayList<Node>();
-		File rootFolder = service.files().get("root").setFields("id, name").execute();
 
 		FileList result = service.files().list()
 				.setQ(String.format("name = '%s' and trashed = false", fileNameToSearch)).setSpaces("drive")
@@ -78,66 +81,53 @@ public class DriveRecursiveFileSearchQueries {
 	}
 
 	public List<File> findPathFromTargetFileToRoot(Queue<String> queue) throws IOException {
-		logger.debug("pathExistsFromFileToRoot ENTER");
-		List<File> returnFileList = new LinkedList<File>();
-		File rootFolder = service.files().get("root").setFields("id, name").execute();
-
 		String initialSearchItemName = queue.poll();
-		boolean found = false;
+		List<Node> nodeList = findAllParentDirectories(initialSearchItemName);
+		List<File> returnFileList = new LinkedList<File>();
 
-		FileList result = service.files().list()
-				.setQ(String.format("name = '%s' and trashed = false", initialSearchItemName)).setSpaces("drive")
-				.setFields("nextPageToken, files(id, name, parents)").execute();
-
-		List<File> searchResults = result.getFiles();
-		
-		if (searchResults != null && !searchResults.isEmpty()) {
-			for (File searchResult : searchResults) {
-				logger.debug(
-						String.format("searchResult.id: %s .name: %s", searchResult.getId(), searchResult.getName()));
-
-				// the initialSearchItemName could have multiple results, and we call reverseFileCompare on each one
-				// because of this, we need to COPY the queue, as each individual reverseFileCompare consumes the queue it receives.
+		if (nodeList != null && !nodeList.isEmpty()) {
+			for (Node firstNode : nodeList) {
+				// the initialSearchItemName could have multiple results, and we call
+				// reverseFileCompare on each one
+				// because of this, we need to COPY the queue, as each individual
+				// reverseFileCompare consumes the queue it receives.
 				Queue<String> queueToConsume = new LinkedList<String>(queue);
-				found = reverseFileCompare(queueToConsume, returnFileList, rootFolder, searchResult);
-				
-				if (found) {
+
+				returnFileList = reverseFileCompare(queueToConsume, firstNode);
+
+				if (returnFileList != null && returnFileList.size() > 0) {
 					break;
 				}
-				
-				// if we get here, then the path from file to root was NOT found, so reset for next "searchResult"
+
+				// if we get here, then the path from file to root was NOT found, so reset for
+				// next "searchResult"
 				returnFileList = new LinkedList<File>();
+			}
+		}
+
+		return returnFileList;
+	}
+
+	private List<File> reverseFileCompare(Queue<String> queue, Node currentNode) throws IOException {
+		List<File> returnFileList = new LinkedList<File>();
+
+		String nextItemNameInQueue = queue.poll();
+
+		for (Node parentNode : currentNode.parentItems) {
+			File parentFolder = parentNode.currentItem;
+			String parentFolderName = parentFolder.getName();
+
+			if (parentFolderName.equals(nextItemNameInQueue)) {
+				List<File> subsequentFileList = reverseFileCompare(queue, parentNode);
+
+				if (CollectionUtils.isNotEmpty(subsequentFileList)) {
+					returnFileList.addAll(subsequentFileList); //break here TODO
+				}
+			} else if (rootFolder.getId().equals(parentFolder.getId())) {
+				returnFileList.add(rootFolder);  //break here TODO
 			}
 		}
 		
 		return returnFileList;
-	}
-
-	private boolean reverseFileCompare(Queue<String> queue, List<File> actualFilePath, File rootFolder,
-			File searchResult) throws IOException {
-		boolean found = false;
-		String nextItemNameInQueue = queue.poll();
-
-		for (String parentFolderId : searchResult.getParents()) {
-			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
-			String parentFolderName = parentFolder.getName();
-			logger.debug(String.format("parentFolder.id: %s .name: %s", parentFolder.getId(), parentFolderName));
-
-			if (parentFolderName.equals(nextItemNameInQueue)) {
-				found = reverseFileCompare(queue, actualFilePath, rootFolder, parentFolder);
-
-				if (found) {
-					actualFilePath.add(searchResult);
-				}
-
-				logger.debug(String.format("searchResult: %s found: %s", searchResult.getName(), found));
-				// when we reach the root folder, we terminate the recursion
-				// (pathExistsFromFileToRoot is not called again in this "else" block)
-			} else if (rootFolder.getId().equals(parentFolder.getId())) {
-				actualFilePath.add(searchResult);
-				found = true;
-			}
-		}
-		return found;
 	}
 }

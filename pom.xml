@@ -7,44 +7,13 @@
 		<artifactId>google</artifactId>
 		<version>5</version>
 	</parent>
-	<groupId>com.google.apis-samples</groupId>
-	<artifactId>drive-cmdline-sample</artifactId>
+	<groupId>com.pilotprogrammer</groupId>
+	<artifactId>GoogleDriveApiFileRecursion</artifactId>
 	<version>1.0.0</version>
-	<name>Example for the Drive API v1.0 using JSON and OAuth 2.0</name>
-
-	<url>http://code.google.com/p/google-api-java-client/</url>
-
-	<issueManagement>
-		<system>code.google.com</system>
-		<url>http://code.google.com/p/google-api-java-client/issues/list</url>
-	</issueManagement>
-
-	<inceptionYear>2012</inceptionYear>
 
 	<prerequisites>
 		<maven>2.0.9</maven>
 	</prerequisites>
-
-	<scm>
-		<connection>scm:hg:https://samples.google-api-java-client.googlecode.com/hg/</connection>
-		<developerConnection>scm:hg:https://samples.google-api-java-client.googlecode.com/hg/</developerConnection>
-		<url>http://code.google.com/p/google-api-java-client/source/browse/?repo=samples</url>
-	</scm>
-
-	<developers>
-		<developer>
-			<id>rmistry</id>
-			<name>Ravi Mistry</name>
-			<email>rmistry@google.com</email>
-			<organization>Google</organization>
-			<organizationUrl>http://www.google.com</organizationUrl>
-			<roles>
-				<role>owner</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-5</timezone>
-		</developer>
-	</developers>
 
 	<build>
 		<plugins>
@@ -68,7 +37,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>com.google.api.services.samples.drive.cmdline.DriveSample</mainClass>
+					<mainClass>com.google.api.services.samples.drive.cmdline.DriveQuickstart</mainClass>
 					<systemProperties>
 						<systemProperty>
 							<key>java.util.logging.config.file</key>
@@ -132,6 +101,18 @@
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<version>2.7</version>
 		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.commons</groupId> -->
+		<!-- <artifactId>commons-lang3</artifactId> -->
+		<!-- <version>3.8.1</version> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.0</version>
+		</dependency>
+
+
 
 	</dependencies>
 	<properties>
