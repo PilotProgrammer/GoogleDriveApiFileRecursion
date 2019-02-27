@@ -16,6 +16,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.samples.drive.cmdline.queries.DriveRecursiveFileSearchQueries;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,21 +87,14 @@ public class DriveQuickstart {
 //        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
 //            outputListOfFileResults(childItems);
 //        });
-        
-        long start = System.nanoTime();
-          
-		DriveRecursiveFileSearchQueries recursiveSearch = new DriveRecursiveFileSearchQueries(service);
+                  
+		DriveRecursiveFileSearchQueries recursiveSearch = new DriveRecursiveFileSearchQueries(service, "Be40-notes");
 		
 		checkFilePath_1(recursiveSearch);
 		checkFilePath_2(recursiveSearch);
 		checkFilePath_3(recursiveSearch);
 		checkFilePath_4(recursiveSearch);
-		
-//		List<DriveRecursiveFileSearchQueries.Node> nodes = recursiveSearch.findAllParentDirectories("Be40-notes");
-		long finish = System.nanoTime();
-	    long timeElapsed = finish - start;
-    	logger.info(String.format("timeElapsed: %s", timeElapsed/ 1000000000f)); //8-9s
-
+		checkFilePath_5(recursiveSearch);
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
@@ -135,7 +129,7 @@ public class DriveQuickstart {
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 1 //////////");
 	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = pathOfItemsFromTargetFileToRoot != null && pathOfItemsFromTargetFileToRoot.size() > 0;
+	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 
@@ -150,7 +144,7 @@ public class DriveQuickstart {
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 2 //////////");
 	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = pathOfItemsFromTargetFileToRoot != null && pathOfItemsFromTargetFileToRoot.size() > 0;
+	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 
@@ -163,7 +157,7 @@ public class DriveQuickstart {
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 3 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = pathOfItemsFromTargetFileToRoot != null && pathOfItemsFromTargetFileToRoot.size() > 0;
+	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 	
@@ -176,8 +170,22 @@ public class DriveQuickstart {
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 4 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = pathOfItemsFromTargetFileToRoot != null && pathOfItemsFromTargetFileToRoot.size() > 0;
+	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
+	
+	private static void checkFilePath_5(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+		Queue<String> queue = new LinkedList<String>();
+		queue.offer("Be40-notes-wrong-file-should-throw-illegal-argument-exception");
+		queue.offer("past-safety-messages");
+		queue.offer("Flight club");
+
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 5 //////////");
+		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
+	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
+		logger.info("found " + found);
+	}
+	
 
 }

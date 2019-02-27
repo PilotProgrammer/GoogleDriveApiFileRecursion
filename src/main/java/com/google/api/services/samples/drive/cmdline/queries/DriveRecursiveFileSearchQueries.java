@@ -5,6 +5,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,10 +20,13 @@ public class DriveRecursiveFileSearchQueries {
 
 	protected Drive service;
 	protected File rootFolder;
+	protected String fileNameToSearch;
+	protected List<Node> allPathsFromTargetFileToRoot;
 
-	public DriveRecursiveFileSearchQueries(Drive service) throws IOException {
+	public DriveRecursiveFileSearchQueries(Drive service, String fileNameToSearch) throws IOException {
 		this.service = service;
 		rootFolder = service.files().get("root").setFields("id, name").execute();
+		this.fileNameToSearch = fileNameToSearch;
 	}
 
 	public static class Node {
@@ -31,9 +35,12 @@ public class DriveRecursiveFileSearchQueries {
 		public List<Node> parentItems = new ArrayList<Node>();
 	}
 
-	// TODOGG rename this method
-	public List<Node> findAllParentDirectories(String fileNameToSearch) throws IOException {
-		List<Node> returnNodeList = new ArrayList<Node>();
+	public List<Node> findAllPathsFromTargetFileToRoot() throws IOException {
+		if (allPathsFromTargetFileToRoot != null) {
+			return allPathsFromTargetFileToRoot;
+		}
+		
+		allPathsFromTargetFileToRoot = new ArrayList<Node>();
 
 		FileList result = service.files().list()
 				.setQ(String.format("name = '%s' and trashed = false", fileNameToSearch)).setSpaces("drive")
@@ -50,14 +57,14 @@ public class DriveRecursiveFileSearchQueries {
 				rootNode.currentItem = searchResult;
 				rootNode.nodeLevel = 0;
 				reverseFileSearch(rootFolder, rootNode);
-				returnNodeList.add(rootNode);
+				allPathsFromTargetFileToRoot.add(rootNode);
 			}
 		}
-
-		return returnNodeList;
+		
+		return allPathsFromTargetFileToRoot;
 	}
 
-	private void reverseFileSearch(File rootFolder, Node node) throws IOException {
+	protected void reverseFileSearch(File rootFolder, Node node) throws IOException {
 		File searchResult = node.currentItem;
 
 		for (String parentFolderId : searchResult.getParents()) {
@@ -82,20 +89,29 @@ public class DriveRecursiveFileSearchQueries {
 
 	public List<File> findPathFromTargetFileToRoot(Queue<String> queue) throws IOException {
 		String initialSearchItemName = queue.poll();
-		List<Node> nodeList = findAllParentDirectories(initialSearchItemName);
+		
+		if (!StringUtils.equals(initialSearchItemName, fileNameToSearch)) {
+			throw new IllegalArgumentException(
+					String.format("The first item in the search queue is the target file: %s "
+					+ "This target file in the search queue does not match the search file that was provided during object instantiation: %s"
+							, initialSearchItemName, fileNameToSearch));
+		}
+		
+		List<Node> nodeList = findAllPathsFromTargetFileToRoot();
 		List<File> returnFileList = new LinkedList<File>();
 
 		if (nodeList != null && !nodeList.isEmpty()) {
 			for (Node firstNode : nodeList) {
 				// the initialSearchItemName could have multiple results, and we call
-				// reverseFileCompare on each one
+				// reverseFileCompare on each one.
 				// because of this, we need to COPY the queue, as each individual
 				// reverseFileCompare consumes the queue it receives.
 				Queue<String> queueToConsume = new LinkedList<String>(queue);
+				List<File> subsequentFileList = reverseFileCompare(queueToConsume, firstNode);
 
-				returnFileList = reverseFileCompare(queueToConsume, firstNode);
-
-				if (returnFileList != null && returnFileList.size() > 0) {
+				if (CollectionUtils.isNotEmpty(subsequentFileList)) {
+					returnFileList.add(firstNode.currentItem);
+					returnFileList.addAll(subsequentFileList);
 					break;
 				}
 
@@ -121,10 +137,23 @@ public class DriveRecursiveFileSearchQueries {
 				List<File> subsequentFileList = reverseFileCompare(queue, parentNode);
 
 				if (CollectionUtils.isNotEmpty(subsequentFileList)) {
-					returnFileList.addAll(subsequentFileList); //break here TODO
+					returnFileList.add(parentFolder);
+					returnFileList.addAll(subsequentFileList);
+					break;
 				}
-			} else if (rootFolder.getId().equals(parentFolder.getId())) {
-				returnFileList.add(rootFolder);  //break here TODO
+				// why queue.isEmpty()? because the following situation is possible and would produce a 
+				// false positive if we didn't check for the queue being empty.
+				// say the file exists under a directory structure of [root] -> D -> E -> F -> [targetFile],
+				// and furthermore say that the search queue has structure of
+				// [root] -> A-> B-> C -> D -> E -> F -> [targetFile].
+				// Well, as soon as we reverseFileCompare runs and we get D, then next recursive call of
+				// reverseFileCompare will end on [root], and the recursion will end. However, the recursive 
+				// search in that case would have incorrectly excluded A, B, and C from the check. 
+				// By having the queue.isempty check, we ensure that this situation will not happen, as the
+				// queue isn't empty until A, B, and C are successfully taken off the queue.
+			} else if (rootFolder.getId().equals(parentFolder.getId()) && queue.isEmpty()) {
+				returnFileList.add(rootFolder);
+				break;
 			}
 		}
 		
