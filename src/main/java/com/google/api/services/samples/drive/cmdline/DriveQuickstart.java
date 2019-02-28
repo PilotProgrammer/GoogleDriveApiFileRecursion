@@ -14,7 +14,8 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.samples.drive.cmdline.queries.DriveRecursiveFileSearchQueries;
+import com.google.api.services.samples.drive.cmdline.queries.DriveBasicReadQueries;
+import com.google.api.services.samples.drive.cmdline.queries.TargetFilePathsDriveQuery;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 public class DriveQuickstart {
@@ -71,24 +73,24 @@ public class DriveQuickstart {
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         
-//        logger.info("////////// SANITY CHECK //////////");
-//		List<File> sanityCheckResults = sanityCheck(service);
-//        outputListOfFileResults(sanityCheckResults);
-//
-//        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
-//        
-//        List<File> listFoldersInRootResults = query.listFoldersInRoot();
-//        logger.info("////////// LIST ALL FOLDERS IN ROOT DIRECTORY //////////");
-//        outputListOfFileResults(listFoldersInRootResults);
-//        
-//        Map<File, List<File>> listChildItemsOfFolderResults = query.listChildItemsOfFolder("CAE Simuflite Beechjet");
-//        logger.info("////////// LIST ALL CHILD ITEMS OF FOLDERS MATCHING NAME //////////");
-//        listChildItemsOfFolderResults.forEach((parentFolder, childItems) -> {
-//        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
-//            outputListOfFileResults(childItems);
-//        });
+        logger.info("////////// SANITY CHECK //////////");
+		List<File> sanityCheckResults = sanityCheck(service);
+        outputListOfFileResults(sanityCheckResults);
+
+        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
+        
+        List<File> listFoldersInRootResults = query.listFoldersInRoot();
+        logger.info("////////// LIST ALL FOLDERS IN ROOT DIRECTORY //////////");
+        outputListOfFileResults(listFoldersInRootResults);
+        
+        Map<File, List<File>> listChildItemsOfFolderResults = query.listChildItemsOfFolder("CAE Simuflite Beechjet");
+        logger.info("////////// LIST ALL CHILD ITEMS OF FOLDERS MATCHING NAME //////////");
+        listChildItemsOfFolderResults.forEach((parentFolder, childItems) -> {
+        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
+            outputListOfFileResults(childItems);
+        });
                   
-		DriveRecursiveFileSearchQueries recursiveSearch = new DriveRecursiveFileSearchQueries(service, "Be40-notes");
+		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "Be40-notes");
 		
 		checkFilePath_1(recursiveSearch);
 		checkFilePath_2(recursiveSearch);
@@ -117,7 +119,7 @@ public class DriveQuickstart {
 		}
     }
     
-	public static void checkFilePath_1(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+	public static void checkFilePath_1(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes");
 		queue.offer("Docs");
@@ -126,14 +128,14 @@ public class DriveQuickstart {
 		queue.offer("DDA");
 		queue.offer("CFI");
 		queue.offer("Flying");
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 1 //////////");
 	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 
-	public static void checkFilePath_2(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+	public static void checkFilePath_2(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes");
 		queue.offer("Docs");
@@ -141,46 +143,46 @@ public class DriveQuickstart {
 		queue.offer("Beechjet");
 		queue.offer("Asus stuff");
 
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 2 //////////");
 	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 
-	private static void checkFilePath_3(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+	private static void checkFilePath_3(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes");
 		queue.offer("past-safety-messages");
 		queue.offer("Flight club");
 
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 3 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 	
-	private static void checkFilePath_4(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+	private static void checkFilePath_4(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes");
 		queue.offer("non-existant-folder");
 		queue.offer("Flight club");
 
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 4 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
 	
-	private static void checkFilePath_5(DriveRecursiveFileSearchQueries recursiveSearch) throws IOException {
+	private static void checkFilePath_5(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes-wrong-file-should-throw-illegal-argument-exception");
 		queue.offer("past-safety-messages");
 		queue.offer("Flight club");
 
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.findPathFromTargetFileToRoot(queue);
+		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 5 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
