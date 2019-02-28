@@ -26,7 +26,6 @@ public class TargetFilePathsDriveQuery {
 	}
 
 	public static class Node {
-		public Integer nodeLevel;
 		public File currentItem;
 		public List<Node> parentItems = new ArrayList<Node>();
 	}
@@ -36,19 +35,20 @@ public class TargetFilePathsDriveQuery {
 		if (allTargetFilePaths != null) {
 			return allTargetFilePaths;
 		}
-
-		allTargetFilePaths = new ArrayList<Node>();
+		
 		// 2
+		allTargetFilePaths = new ArrayList<Node>();
+		
+		// 3
 		FileList result = service.files().list().setQ(String.format("name = '%s' and trashed = false", targetFileName))
 				.setSpaces("drive").setFields("nextPageToken, files(id, name, parents)").execute();
 
 		List<File> targetFiles = result.getFiles();
 		for (File targetFile : targetFiles) {
-			Node rootNode = new Node();
-			// 3
-			rootNode.currentItem = targetFile;
-			rootNode.nodeLevel = 0;
 			// 4
+			Node rootNode = new Node();
+			rootNode.currentItem = targetFile;
+			// 5
 			constructTargetFilePath(rootNode);
 			allTargetFilePaths.add(rootNode);
 		}
@@ -103,7 +103,6 @@ public class TargetFilePathsDriveQuery {
 			Node nextNode = new Node();
 			node.parentItems.add(nextNode);
 			nextNode.currentItem = parentFolder;
-			nextNode.nodeLevel = node.nodeLevel + 1;
 
 			// when we reach the root folder, then we terminate the recursion
 			if (rootFolder.getId().equals(parentFolderId)) {
