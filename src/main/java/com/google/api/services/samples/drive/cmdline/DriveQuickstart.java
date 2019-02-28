@@ -96,7 +96,7 @@ public class DriveQuickstart {
 		checkFilePath_2(recursiveSearch);
 		checkFilePath_3(recursiveSearch);
 		checkFilePath_4(recursiveSearch);
-		checkFilePath_5(recursiveSearch);
+		checkFilePath_5_illegalArg(recursiveSearch);
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
@@ -176,18 +176,23 @@ public class DriveQuickstart {
 		logger.info("found " + found);
 	}
 	
-	private static void checkFilePath_5(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
+	private static void checkFilePath_5_illegalArg(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
 		queue.offer("Be40-notes-wrong-file-should-throw-illegal-argument-exception");
 		queue.offer("past-safety-messages");
 		queue.offer("Flight club");
-
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
+		
+		List<File> pathOfItemsFromTargetFileToRoot = null;
+		
+		try {
+			pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
+		} catch (IllegalArgumentException ex) {
+			logger.error(ex.getMessage());
+		}
+		
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 5 //////////");
 		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
-	
-
 }

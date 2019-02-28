@@ -32,46 +32,30 @@ public class TargetFilePathsDriveQuery {
 	}
 
 	public List<Node> findAllTargetFilePaths() throws IOException {
+		// 1
 		if (allTargetFilePaths != null) {
 			return allTargetFilePaths;
 		}
 
 		allTargetFilePaths = new ArrayList<Node>();
+		// 2
 		FileList result = service.files().list().setQ(String.format("name = '%s' and trashed = false", targetFileName))
 				.setSpaces("drive").setFields("nextPageToken, files(id, name, parents)").execute();
 
 		List<File> targetFiles = result.getFiles();
 		for (File targetFile : targetFiles) {
 			Node rootNode = new Node();
+			// 3
 			rootNode.currentItem = targetFile;
 			rootNode.nodeLevel = 0;
+			// 4
 			constructTargetFilePath(rootNode);
 			allTargetFilePaths.add(rootNode);
 		}
 
 		return allTargetFilePaths;
 	}
-
-	protected void constructTargetFilePath(Node node) throws IOException {
-		File searchResult = node.currentItem;
-
-		for (String parentFolderId : searchResult.getParents()) {
-			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
-
-			Node nextNode = new Node();
-			node.parentItems.add(nextNode);
-			nextNode.currentItem = parentFolder;
-			nextNode.nodeLevel = node.nodeLevel + 1;
-
-			// when we reach the root folder, then we terminate the recursion
-			if (rootFolder.getId().equals(parentFolderId)) {
-				return;
-			}
-
-			constructTargetFilePath(nextNode);
-		}
-	}
-
+	
 	public List<File> validateTargetFilePath(Queue<String> targetFilePath) throws IOException {
 		String targetFileNameFromQueue = targetFilePath.poll();
 
@@ -108,6 +92,26 @@ public class TargetFilePathsDriveQuery {
 		}
 
 		return returnTargetFilePath;
+	}
+
+	protected void constructTargetFilePath(Node node) throws IOException {
+		File searchResult = node.currentItem;
+
+		for (String parentFolderId : searchResult.getParents()) {
+			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
+
+			Node nextNode = new Node();
+			node.parentItems.add(nextNode);
+			nextNode.currentItem = parentFolder;
+			nextNode.nodeLevel = node.nodeLevel + 1;
+
+			// when we reach the root folder, then we terminate the recursion
+			if (rootFolder.getId().equals(parentFolderId)) {
+				return;
+			}
+
+			constructTargetFilePath(nextNode);
+		}
 	}
 
 	private List<File> validateTargetFilePath(Queue<String> targetFileNameFromQueue, Node currentNode)
