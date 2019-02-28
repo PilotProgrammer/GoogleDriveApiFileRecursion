@@ -97,18 +97,23 @@ public class TargetFilePathsDriveQuery {
 	protected void constructTargetFilePath(Node node) throws IOException {
 		File searchResult = node.currentItem;
 
+		// 1
 		for (String parentFolderId : searchResult.getParents()) {
+			// 2
 			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
 
+			// 3
 			Node nextNode = new Node();
 			node.parentItems.add(nextNode);
 			nextNode.currentItem = parentFolder;
-
+			
+			// 4
 			// when we reach the root folder, then we terminate the recursion
 			if (rootFolder.getId().equals(parentFolderId)) {
 				return;
 			}
 
+			// 5
 			constructTargetFilePath(nextNode);
 		}
 	}
