@@ -94,17 +94,17 @@ public class TargetFilePathsDriveQuery {
 		return returnTargetFilePath;
 	}
 
-	protected void constructTargetFilePath(Node node) throws IOException {
-		File searchResult = node.currentItem;
+	protected void constructTargetFilePath(Node currentNode) throws IOException {
+		File currentItem = currentNode.currentItem;
 
 		// 1
-		for (String parentFolderId : searchResult.getParents()) {
+		for (String parentFolderId : currentItem.getParents()) {
 			// 2
 			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
 
 			// 3
 			Node nextNode = new Node();
-			node.parentItems.add(nextNode);
+			currentNode.parentItems.add(nextNode);
 			nextNode.currentItem = parentFolder;
 			
 			// 4
@@ -118,7 +118,7 @@ public class TargetFilePathsDriveQuery {
 		}
 	}
 
-	private List<File> validateTargetFilePath(Queue<String> targetFileNameFromQueue, Node currentNode)
+	protected List<File> validateTargetFilePath(Queue<String> targetFileNameFromQueue, Node currentNode)
 			throws IOException {
 		List<File> returnTargetFilePath = new LinkedList<File>();
 		String nextItemNameInPath = targetFileNameFromQueue.poll();
