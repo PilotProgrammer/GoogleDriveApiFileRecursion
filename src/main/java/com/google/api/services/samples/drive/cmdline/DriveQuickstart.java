@@ -14,10 +14,10 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.samples.drive.cmdline.queries.DriveBasicReadQueries;
 import com.google.api.services.samples.drive.cmdline.queries.TargetFilePathsDriveQuery;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,6 @@ import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 public class DriveQuickstart {
@@ -73,23 +72,25 @@ public class DriveQuickstart {
                 .setApplicationName(APPLICATION_NAME)
                 .build();
         
-        logger.info("////////// SANITY CHECK //////////");
-		List<File> sanityCheckResults = sanityCheck(service);
-        outputListOfFileResults(sanityCheckResults);
-
-        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
-        
-        List<File> listFoldersInRootResults = query.listFoldersInRoot();
-        logger.info("////////// LIST ALL FOLDERS IN ROOT DIRECTORY //////////");
-        outputListOfFileResults(listFoldersInRootResults);
-        
-        Map<File, List<File>> listChildItemsOfFolderResults = query.listChildItemsOfFolder("CAE Simuflite Beechjet");
-        logger.info("////////// LIST ALL CHILD ITEMS OF FOLDERS MATCHING NAME //////////");
-        listChildItemsOfFolderResults.forEach((parentFolder, childItems) -> {
-        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
-            outputListOfFileResults(childItems);
-        });
+//        logger.info("////////// SANITY CHECK //////////");
+//		List<File> sanityCheckResults = sanityCheck(service);
+//        outputListOfFileResults(sanityCheckResults);
+//
+//        DriveBasicReadQueries query = new DriveBasicReadQueries(service);
+//        
+//        List<File> listFoldersInRootResults = query.listFoldersInRoot();
+//        logger.info("////////// LIST ALL FOLDERS IN ROOT DIRECTORY //////////");
+//        outputListOfFileResults(listFoldersInRootResults);
+//        
+//        Map<File, List<File>> listChildItemsOfFolderResults = query.listChildItemsOfFolder("CAE Simuflite Beechjet");
+//        logger.info("////////// LIST ALL CHILD ITEMS OF FOLDERS MATCHING NAME //////////");
+//        listChildItemsOfFolderResults.forEach((parentFolder, childItems) -> {
+//        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
+//            outputListOfFileResults(childItems);
+//        });
                   
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "Be40-notes");
 		
 		checkFilePath_1(recursiveSearch);
@@ -97,6 +98,9 @@ public class DriveQuickstart {
 		checkFilePath_3(recursiveSearch);
 		checkFilePath_4(recursiveSearch);
 		checkFilePath_5_illegalArg(recursiveSearch);
+		
+        stopWatch.stop();
+        System.out.println("Time: " + stopWatch.getTime());
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
