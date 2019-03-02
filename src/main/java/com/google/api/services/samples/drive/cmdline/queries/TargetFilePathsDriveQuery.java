@@ -9,11 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -74,64 +72,57 @@ public class TargetFilePathsDriveQuery {
 	}
 	
 	public void toBranches() throws IOException {
-		Queue<String> targetFilePath = null;
-		String targetFileNameFromQueue = targetFilePath.poll();
-
-		Map<File,Set<List<File>>> allForwardFilePaths = new HashMap<File,Set<List<File>>>();
-		
-		List<File> returnTargetFilePath = new LinkedList<File>();
-
 		if (allReverseFilePaths != null && !allReverseFilePaths.isEmpty()) {
 			for (ReverseNode targetFileNode : allReverseFilePaths) {
-				File targetFile = targetFileNode.currentItem;
-				
-				Set<List<File>> setOfForwardPathsForTargetFile = new HashSet<List<File>>();
-				Queue<String> queueToConsume = new LinkedList<String>(targetFilePath);
-				List<File> subsequentTargetFilePath = toBranches2(queueToConsume, targetFileNode);
+				File targetFile = targetFileNode.currentItem; // used for key in allForwardFilePaths var
+				Set<Queue<File>> setOfForwardPathsForTargetFile = toBranches2(targetFileNode);
 
-				if (CollectionUtils.isNotEmpty(subsequentTargetFilePath)) {
-					returnTargetFilePath.add(targetFileNode.currentItem);
-					returnTargetFilePath.addAll(subsequentTargetFilePath);
-					break;
+				if (CollectionUtils.isNotEmpty(setOfForwardPathsForTargetFile)) {
+					// TODOGG1 - here you need to iterate all of the list<file>
+//					in setOfForwardPathsForTargetFile and add the targetFile to the END of that list (then we will reverse them later)
+					for (Queue<File> queue : setOfForwardPathsForTargetFile) {
+						queue.add(targetFile);
+					}
 				}
-
-				// if we get here, then the path from file to root was NOT found, so reset for
-				// next "searchResult"
-				returnTargetFilePath = new LinkedList<File>();
 			}
 		}
 
 	}
 	
-	protected List<File> toBranches2(Queue<String> targetFileNameFromQueue, ReverseNode currentNode)
+	protected Set<Queue<File>> toBranches2(ReverseNode currentNode)
 			throws IOException {
-		List<File> returnTargetFilePath = new LinkedList<File>();
-		String nextItemNameInPath = targetFileNameFromQueue.poll();
+		
+		Set<Queue<File>> setOfForwardPathsForTargetFile = null;
+		
+		// this means that we have reached the root / "My Drive" folder, 
+		// in which case we instantiate a list with the root as only parent,
+		// add it to a newly instantiated set.
+		if (CollectionUtils.isEmpty(currentNode.parentItems)) {
+			Queue<File> filePathList = new LinkedList<File>();
+			setOfForwardPathsForTargetFile = new HashSet<Queue<File>>();
+			filePathList.add(currentNode.currentItem);
+			setOfForwardPathsForTargetFile.add(filePathList);
+		} else {
+			// we have NOT reached the root node, so we need to check all 
+			// the parent items and recursively build the 
+			// reverse file paths
+			// TODOGG - article - mention this is essentially DFS
+			for (ReverseNode parentNode : currentNode.parentItems) {
+				setOfForwardPathsForTargetFile = toBranches2(parentNode);
 
-		for (ReverseNode parentNode : currentNode.parentItems) {
-			File parentFolder = parentNode.currentItem;
-			String parentFolderName = parentFolder.getName();
-
-			if (parentFolderName.equals(nextItemNameInPath)) {
-				List<File> subsequentFileList = validateTargetFilePath(targetFileNameFromQueue, parentNode);
-
-				if (CollectionUtils.isNotEmpty(subsequentFileList)) {
-					returnTargetFilePath.add(parentFolder);
-					returnTargetFilePath.addAll(subsequentFileList);
-					break;
+				if (CollectionUtils.isNotEmpty(setOfForwardPathsForTargetFile)) {
+					// TODOGG - see TODOGG1 in toBranches1 - will need to do something comparable here
+					for (Queue<File> queue : setOfForwardPathsForTargetFile) {
+						queue.add(currentNode.currentItem);
+					}
 				}
-
-			} else if (rootFolder.getId().equals(parentFolder.getId()) && targetFileNameFromQueue.isEmpty()) {
-				returnTargetFilePath.add(rootFolder);
-				break;
 			}
+
 		}
 
-		return returnTargetFilePath;
+		return setOfForwardPathsForTargetFile;
 	}
 
-
-	
 	public List<File> validateTargetFilePath(Queue<String> targetFilePath) throws IOException {
 		String targetFileNameFromQueue = targetFilePath.poll();
 
