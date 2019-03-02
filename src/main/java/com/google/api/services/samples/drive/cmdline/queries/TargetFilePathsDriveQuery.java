@@ -17,27 +17,32 @@ public class TargetFilePathsDriveQuery {
 	protected Drive service = null;
 	protected File rootFolder = null;
 	protected String targetFileName = null;
-	protected List<Node> allTargetFilePaths = null;
+	protected List<ReverseNode> allReverseFilePaths = null;
 
 	public TargetFilePathsDriveQuery(Drive service, String targetFileName) throws IOException {
 		this.service = service;
 		rootFolder = service.files().get("root").setFields("id, name").execute();
 		this.targetFileName = targetFileName;
 	}
-
+	
 	public static class Node {
 		public File currentItem;
-		public List<Node> parentItems = new ArrayList<Node>();
+		public Node nextNode;
 	}
 
-	public List<Node> findAllTargetFilePaths() throws IOException {
+	public static class ReverseNode {
+		public File currentItem;
+		public List<ReverseNode> parentItems = new ArrayList<ReverseNode>();
+	}
+
+	public List<ReverseNode> findFilePaths() throws IOException {
 		// 1
-		if (allTargetFilePaths != null) {
-			return allTargetFilePaths;
+		if (allReverseFilePaths != null) {
+			return allReverseFilePaths;
 		}
 		
 		// 2
-		allTargetFilePaths = new ArrayList<Node>();
+		allReverseFilePaths = new ArrayList<ReverseNode>();
 		
 		// 3
 		FileList result = service.files().list().setQ(String.format("name = '%s' and trashed = false", targetFileName))
@@ -46,14 +51,14 @@ public class TargetFilePathsDriveQuery {
 		List<File> targetFiles = result.getFiles();
 		for (File targetFile : targetFiles) {
 			// 4
-			Node rootNode = new Node();
+			ReverseNode rootNode = new ReverseNode();
 			rootNode.currentItem = targetFile;
 			// 5
-			constructTargetFilePath(rootNode);
-			allTargetFilePaths.add(rootNode);
+			constructReverseFilePath(rootNode);
+			allReverseFilePaths.add(rootNode);
 		}
 
-		return allTargetFilePaths;
+		return allReverseFilePaths;
 	}
 	
 	public List<File> validateTargetFilePath(Queue<String> targetFilePath) throws IOException {
@@ -66,11 +71,11 @@ public class TargetFilePathsDriveQuery {
 					targetFileNameFromQueue, targetFileName));
 		}
 
-		List<Node> nodeList = findAllTargetFilePaths();
+		List<ReverseNode> nodeList = findFilePaths();
 		List<File> returnTargetFilePath = new LinkedList<File>();
 
 		if (nodeList != null && !nodeList.isEmpty()) {
-			for (Node firstNode : nodeList) {
+			for (ReverseNode firstNode : nodeList) {
 				// the targetFilePath could have multiple results, and we call
 				// validateTargetFilePath on each one.
 				// because of this, we need to COPY the queue, as the
@@ -94,7 +99,7 @@ public class TargetFilePathsDriveQuery {
 		return returnTargetFilePath;
 	}
 
-	protected void constructTargetFilePath(Node currentNode) throws IOException {
+	protected void constructReverseFilePath(ReverseNode currentNode) throws IOException {
 		File currentItem = currentNode.currentItem;
 
 		// 1
@@ -103,7 +108,7 @@ public class TargetFilePathsDriveQuery {
 			File parentFolder = service.files().get(parentFolderId).setFields("id, name, parents").execute();
 
 			// 3
-			Node nextNode = new Node();
+			ReverseNode nextNode = new ReverseNode();
 			currentNode.parentItems.add(nextNode);
 			nextNode.currentItem = parentFolder;
 			
@@ -114,16 +119,16 @@ public class TargetFilePathsDriveQuery {
 			}
 
 			// 5
-			constructTargetFilePath(nextNode);
+			constructReverseFilePath(nextNode);
 		}
 	}
 
-	protected List<File> validateTargetFilePath(Queue<String> targetFileNameFromQueue, Node currentNode)
+	protected List<File> validateTargetFilePath(Queue<String> targetFileNameFromQueue, ReverseNode currentNode)
 			throws IOException {
 		List<File> returnTargetFilePath = new LinkedList<File>();
 		String nextItemNameInPath = targetFileNameFromQueue.poll();
 
-		for (Node parentNode : currentNode.parentItems) {
+		for (ReverseNode parentNode : currentNode.parentItems) {
 			File parentFolder = parentNode.currentItem;
 			String parentFolderName = parentFolder.getName();
 
