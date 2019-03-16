@@ -16,7 +16,6 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.samples.drive.cmdline.queries.TargetFilePathsDriveQuery;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 public class DriveQuickstart {
 	private static Logger logger = LoggerFactory.getLogger(DriveQuickstart.class);
@@ -91,8 +88,12 @@ public class DriveQuickstart {
                   
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "Be40-notes");
+		TargetFilePathsDriveQuery recursiveSearch1 = new TargetFilePathsDriveQuery(service, "identicalFile");
+		recursiveSearch1.findFilePaths();
+		
+		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "differentFile");
 		recursiveSearch.findFilePaths();
+
 
 //		checkFilePath_1(recursiveSearch);
 //		checkFilePath_2(recursiveSearch);
@@ -124,15 +125,13 @@ public class DriveQuickstart {
 		}
     }
     
+    /*
 	public static void checkFilePath_1(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
-		queue.offer("Be40-notes");
-		queue.offer("Docs");
-		queue.offer("CAE Simuflite Beechjet");
-		queue.offer("Beechjet");
-		queue.offer("DDA");
-		queue.offer("CFI");
-		queue.offer("Flying");
+		queue.offer("identicalFile");
+		queue.offer("folderC1");
+		queue.offer("folderB1");
+		queue.offer("folderA1");
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 1 //////////");
 	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
@@ -142,11 +141,10 @@ public class DriveQuickstart {
 
 	public static void checkFilePath_2(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
-		queue.offer("Be40-notes");
-		queue.offer("Docs");
-		queue.offer("CAE Simuflite Beechjet");
-		queue.offer("Beechjet");
-		queue.offer("Asus stuff");
+		queue.offer("identicalFile");
+		queue.offer("folderC2");
+		queue.offer("folderB2");
+		queue.offer("folderA2");
 
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 2 //////////");
@@ -157,9 +155,10 @@ public class DriveQuickstart {
 
 	private static void checkFilePath_3(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
-		queue.offer("Be40-notes");
-		queue.offer("past-safety-messages");
-		queue.offer("Flight club");
+		queue.offer("differentFile");
+		queue.offer("folderC1");
+		queue.offer("folderB1");
+		queue.offer("folderA1");
 
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 3 //////////");
@@ -170,9 +169,10 @@ public class DriveQuickstart {
 	
 	private static void checkFilePath_4(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
 		Queue<String> queue = new LinkedList<String>();
-		queue.offer("Be40-notes");
-		queue.offer("non-existant-folder");
-		queue.offer("Flight club");
+		queue.offer("differentFile");
+		queue.offer("folderC2");
+		queue.offer("folderB2");
+		queue.offer("folderA2");
 
 		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
         logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 4 //////////");
@@ -200,4 +200,5 @@ public class DriveQuickstart {
 	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
 		logger.info("found " + found);
 	}
+	*/
 }
