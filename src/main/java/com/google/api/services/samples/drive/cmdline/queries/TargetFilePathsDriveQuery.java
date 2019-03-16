@@ -66,13 +66,12 @@ public class TargetFilePathsDriveQuery {
 //			// when you encounter MULTIPLE parents, you need to COPY the forwardNode branch as it is, and then 
 //		});
 
-		toBranches();
+		Map<File,Set<Queue<File>>> branchesForAllTargetFiles = toBranches();
 		
-
 		return allReverseFilePaths;
 	}
 	
-	public void toBranches() throws IOException {
+	public Map<File,Set<Queue<File>>> toBranches() throws IOException {
 		Map<File,Set<Queue<File>>> branchesForAllTargetFiles = new HashMap<File,Set<Queue<File>>>();
 		
 		if (allReverseFilePaths != null && !allReverseFilePaths.isEmpty()) {
@@ -86,7 +85,8 @@ public class TargetFilePathsDriveQuery {
 				}
 			}
 		}
-
+		
+		return branchesForAllTargetFiles;
 	}
 	
 	protected Set<Queue<File>> toBranches2(ReverseNode currentNode)

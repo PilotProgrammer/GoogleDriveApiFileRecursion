@@ -92,12 +92,13 @@ public class DriveQuickstart {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "Be40-notes");
-		
-		checkFilePath_1(recursiveSearch);
-		checkFilePath_2(recursiveSearch);
-		checkFilePath_3(recursiveSearch);
-		checkFilePath_4(recursiveSearch);
-		checkFilePath_5_illegalArg(recursiveSearch);
+		recursiveSearch.findFilePaths();
+
+//		checkFilePath_1(recursiveSearch);
+//		checkFilePath_2(recursiveSearch);
+//		checkFilePath_3(recursiveSearch);
+//		checkFilePath_4(recursiveSearch);
+//		checkFilePath_5_illegalArg(recursiveSearch);
 		
         stopWatch.stop();
         System.out.println("Time: " + stopWatch.getTime());
