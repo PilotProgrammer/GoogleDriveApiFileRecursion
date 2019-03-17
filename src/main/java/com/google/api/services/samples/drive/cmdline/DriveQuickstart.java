@@ -89,10 +89,10 @@ public class DriveQuickstart {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 		TargetFilePathsDriveQuery recursiveSearch1 = new TargetFilePathsDriveQuery(service, "identicalFile");
-		recursiveSearch1.findFilePaths();
+		recursiveSearch1.getFilePaths();
 		
 		TargetFilePathsDriveQuery recursiveSearch = new TargetFilePathsDriveQuery(service, "differentFile");
-		recursiveSearch.findFilePaths();
+		recursiveSearch.getFilePaths();
 
 
 //		checkFilePath_1(recursiveSearch);

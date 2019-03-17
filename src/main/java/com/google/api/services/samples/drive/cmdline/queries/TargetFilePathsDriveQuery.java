@@ -3,6 +3,7 @@ package com.google.api.services.samples.drive.cmdline.queries;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.ReverseNode;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -20,28 +21,25 @@ public class TargetFilePathsDriveQuery {
 	protected Drive service = null;
 	protected File rootFolder = null;
 	protected String targetFileName = null;
-	protected Map<File,Set<Queue<File>>> branchesForAllTargetFiles = null;
+	protected Map<File,Set<Queue<File>>> branchesForAllFilesMatchingTargetName = null;
 
 	public TargetFilePathsDriveQuery(Drive service, String targetFileName) throws IOException {
 		this.service = service;
-		rootFolder = service.files().get("root").setFields("id, name").execute();
+		
+		if (service != null) {
+			rootFolder = service.files().get("root").setFields("id, name").execute();
+		} else {
+			throw new IllegalArgumentException("Drive Service must not be null");
+		}
+		
 		this.targetFileName = targetFileName;
 	}
-	
-	public static class Node {
-		public File currentItem;
-		public Node nextNode;
-	}
+		
 
-	public static class ReverseNode {
-		public File currentItem;
-		public List<ReverseNode> parentItems = new ArrayList<ReverseNode>();
-	}
-
-	public Map<File,Set<Queue<File>>> findFilePaths() throws IOException {
+	public Map<File,Set<Queue<File>>> getFilePaths() throws IOException {
 		// 1
-		if (branchesForAllTargetFiles != null) {
-			return branchesForAllTargetFiles;
+		if (branchesForAllFilesMatchingTargetName != null) {
+			return branchesForAllFilesMatchingTargetName;
 		}
 		
 		// 2
@@ -61,9 +59,8 @@ public class TargetFilePathsDriveQuery {
 			allReverseFilePaths.add(rootNode);
 		}
 
-		branchesForAllTargetFiles = mapReverseTreeToForwardBranchesForFiles(allReverseFilePaths);
-		
-		return branchesForAllTargetFiles;
+		branchesForAllFilesMatchingTargetName = mapReverseTreeToForwardBranchesForFiles(allReverseFilePaths);
+		return branchesForAllFilesMatchingTargetName;
 	}
 	
 	protected void constructReverseFilePath(ReverseNode currentNode) throws IOException {
@@ -92,6 +89,7 @@ public class TargetFilePathsDriveQuery {
 	
 	public Map<File,Set<Queue<File>>> mapReverseTreeToForwardBranchesForFiles(List<ReverseNode> allReverseFilePaths) throws IOException {
 		Map<File,Set<Queue<File>>> branchesForAllTargetFiles = new HashMap<File,Set<Queue<File>>>();
+		
 		
 		if (allReverseFilePaths != null && !allReverseFilePaths.isEmpty()) {
 			// this outer loop executes once for each target file. each target file can have multiple paths.
