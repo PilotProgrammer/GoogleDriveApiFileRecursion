@@ -14,6 +14,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.FilePathsSearchResult;
 import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchQuery;
 
 import org.apache.commons.lang3.time.StopWatch;
@@ -89,7 +90,9 @@ public class DriveQuickstart {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 		DriveFilePathSearchQuery recursiveSearch1 = new DriveFilePathSearchQuery(service, "identicalFile");
-		recursiveSearch1.getFilePathsSearchResult();
+		FilePathsSearchResult result = recursiveSearch1.getFilePathsSearchResult();
+		
+		logger.info(result.getFileResults().get(0).toString());
 		
 		DriveFilePathSearchQuery recursiveSearch = new DriveFilePathSearchQuery(service, "differentFile");
 		recursiveSearch.getFilePathsSearchResult();
