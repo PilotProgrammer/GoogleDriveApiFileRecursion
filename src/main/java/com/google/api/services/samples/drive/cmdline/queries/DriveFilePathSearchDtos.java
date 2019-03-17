@@ -3,8 +3,8 @@ package com.google.api.services.samples.drive.cmdline.queries;
 import com.google.api.services.drive.model.File;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -44,14 +44,21 @@ public class DriveFilePathSearchDtos {
 			setOfFilePaths.add(filePath);
 		}
 		
-		public Iterator<FilePath> getFilePaths() {
-			return setOfFilePaths.iterator();
+		public Collection<FilePath> getFilePaths() {
+			return setOfFilePaths;
+		}
+		
+		public boolean hasFilePaths() {
+			return setOfFilePaths.size() > 0;
+		}
+		public void addAllFilePaths(FilePathCollection filePathCollection) {
+			setOfFilePaths.addAll(filePathCollection.getFilePaths());
 		}
 	}
 	
 	public static class FilePathsSearchResult {
 		protected String targetFileName;
-		protected List<FilePathCollection> filePathCollections; 
+		protected List<FilePathCollection> filePathCollections;
 
 		public FilePathsSearchResult(String targetFileName) {
 			this.targetFileName = targetFileName;
@@ -68,6 +75,9 @@ public class DriveFilePathSearchDtos {
 		
 		public void addFilePathCollection(FilePathCollection filePathCollection) {
 			filePathCollections.add(filePathCollection);
+		}
+		public boolean checkFilePathExists(Queue<String> filePathOfDirectoryNames) {
+			return true;
 		}
 	}
 }

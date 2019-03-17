@@ -3,27 +3,25 @@ package com.google.api.services.samples.drive.cmdline.queries;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.FilePath;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.FilePathCollection;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.FilePathsSearchResult;
 import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.ReverseNode;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
-public class TargetFilePathsDriveQuery {
+public class DriveFilePathSearchQuery {
 	protected Drive service = null;
 	protected File rootFolder = null;
 	protected String targetFileName = null;
-	protected Map<File,Set<Queue<File>>> branchesForAllFilesMatchingTargetName = null;
-
-	public TargetFilePathsDriveQuery(Drive service, String targetFileName) throws IOException {
+//	protected Map<File,Set<Queue<File>>> branchesForAllFilesMatchingTargetName = null;
+	protected FilePathsSearchResult filePathsSearchResult;
+	
+	public DriveFilePathSearchQuery(Drive service, String targetFileName) throws IOException {
 		this.service = service;
 		
 		if (service != null) {
@@ -36,10 +34,10 @@ public class TargetFilePathsDriveQuery {
 	}
 		
 
-	public Map<File,Set<Queue<File>>> getFilePaths() throws IOException {
+	public FilePathsSearchResult getFilePathsSearchResult() throws IOException {
 		// 1
-		if (branchesForAllFilesMatchingTargetName != null) {
-			return branchesForAllFilesMatchingTargetName;
+		if (filePathsSearchResult != null) {
+			return filePathsSearchResult;
 		}
 		
 		// 2
@@ -59,8 +57,8 @@ public class TargetFilePathsDriveQuery {
 			allReverseFilePaths.add(rootNode);
 		}
 
-		branchesForAllFilesMatchingTargetName = mapReverseTreeToForwardBranchesForFiles(allReverseFilePaths);
-		return branchesForAllFilesMatchingTargetName;
+		filePathsSearchResult = mapReverseTreeToForwardBranchesForFiles(allReverseFilePaths);
+		return filePathsSearchResult;
 	}
 	
 	protected void constructReverseFilePath(ReverseNode currentNode) throws IOException {
@@ -87,55 +85,54 @@ public class TargetFilePathsDriveQuery {
 		}
 	}
 	
-	public Map<File,Set<Queue<File>>> mapReverseTreeToForwardBranchesForFiles(List<ReverseNode> allReverseFilePaths) throws IOException {
-		Map<File,Set<Queue<File>>> branchesForAllTargetFiles = new HashMap<File,Set<Queue<File>>>();
-		
+	public FilePathsSearchResult mapReverseTreeToForwardBranchesForFiles(List<ReverseNode> allReverseFilePaths) throws IOException {
+//		Map<File,Set<Queue<File>>> branchesForAllTargetFiles = new HashMap<File,Set<Queue<File>>>();
+		FilePathsSearchResult filePathsSearchResult = new FilePathsSearchResult(targetFileName);
 		
 		if (allReverseFilePaths != null && !allReverseFilePaths.isEmpty()) {
 			// this outer loop executes once for each target file. each target file can have multiple paths.
 			for (ReverseNode targetFileNode : allReverseFilePaths) {
-				File targetFile = targetFileNode.currentItem; // used for key in allForwardFilePaths var
-				Set<Queue<File>> setOfForwardPathsForTargetFile = mapReverseTreeToForwardBranchesForFile(targetFileNode);
-
-				if (CollectionUtils.isNotEmpty(setOfForwardPathsForTargetFile)) {					
-					branchesForAllTargetFiles.put(targetFile, setOfForwardPathsForTargetFile);
+				FilePathCollection filePathCollection = mapReverseTreeToForwardBranchesForFile(targetFileNode);
+				
+				if (filePathCollection.hasFilePaths()) {					
+					filePathsSearchResult.addFilePathCollection(filePathCollection);
 				}
 			}
 		}
 		
-		return branchesForAllTargetFiles;
+		return filePathsSearchResult;
 	}
 	
-	protected Set<Queue<File>> mapReverseTreeToForwardBranchesForFile(ReverseNode currentNode)
+	protected FilePathCollection mapReverseTreeToForwardBranchesForFile(ReverseNode currentNode)
 			throws IOException {
-		Set<Queue<File>> aggregateSetOfFilePaths = new HashSet<Queue<File>>();
+		FilePathCollection aggregateFilePathCollection = new FilePathCollection(currentNode.currentItem);
 		
 		// this means that we have reached the root / "My Drive" folder, 
 		// in which case we instantiate a list with the root as only parent,
 		// add it to a newly instantiated set.
 		if (CollectionUtils.isEmpty(currentNode.parentItems)) {
-			Queue<File> filePathList = new LinkedList<File>();
-			filePathList.add(currentNode.currentItem);
-			aggregateSetOfFilePaths.add(filePathList);
+			FilePath filePathList = new FilePath();
+			filePathList.addFile(currentNode.currentItem);
+			aggregateFilePathCollection.addFilePath(filePathList);
 		} else {
 			// we have NOT reached the root node, so we need to check all 
 			// the parent items and recursively build the 
 			// reverse file paths
-			// TODOGG - article - mention this is essentially DFS
+			// this is essentially DFS
 			for (ReverseNode parentNode : currentNode.parentItems) {
-				Set<Queue<File>> subsequentSetOfForwardPaths = mapReverseTreeToForwardBranchesForFile(parentNode);
-				aggregateSetOfFilePaths.addAll(subsequentSetOfForwardPaths);
+				FilePathCollection subsequentSetOfForwardPaths = mapReverseTreeToForwardBranchesForFile(parentNode);
+				aggregateFilePathCollection.addAllFilePaths(subsequentSetOfForwardPaths);
 			}
 			
 			// now that we have completed DFS for all the branches related to THIS File, it's time to actually 
 			// add this item to the file path.
-			if (CollectionUtils.isNotEmpty(aggregateSetOfFilePaths)) {
-				for (Queue<File> queue : aggregateSetOfFilePaths) {
-					queue.add(currentNode.currentItem);
+			if (aggregateFilePathCollection.hasFilePaths()) {
+				for (FilePath filePath : aggregateFilePathCollection.getFilePaths()) {
+					filePath.addFile(currentNode.currentItem);
 				}
 			}
 		}
 
-		return aggregateSetOfFilePaths;
+		return aggregateFilePathCollection;
 	}
 }
