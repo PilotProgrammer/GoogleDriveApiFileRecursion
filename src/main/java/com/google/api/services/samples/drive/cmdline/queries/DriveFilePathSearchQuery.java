@@ -18,7 +18,6 @@ public class DriveFilePathSearchQuery {
 	protected Drive service = null;
 	protected File rootFolder = null;
 	protected String targetFileName = null;
-//	protected Map<File,Set<Queue<File>>> branchesForAllFilesMatchingTargetName = null;
 	protected FilePathsSearchResult filePathsSearchResult;
 	
 	public DriveFilePathSearchQuery(Drive service, String targetFileName) throws IOException {
