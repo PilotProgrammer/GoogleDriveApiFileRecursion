@@ -24,9 +24,9 @@ public class DriveFilePathSearchDtos {
 			filePath.add(file);
 		}
 
-//		public File getNextFile() {
-//			return queue.poll();
-//		}
+		public List<File> getFilePath() {
+			return filePath;
+		}
 		
 		public boolean equalsFilePath(List<File> filePathToCompare) {
 			boolean areEqual = true;
@@ -117,7 +117,18 @@ public class DriveFilePathSearchDtos {
 			setOfFilePaths.addAll(filePathCollection.getFilePaths());
 		}
 		
-//		public boolean containsFilePath(List)
+		public boolean containsFilePath(List<String> filePath) {
+			boolean contains = false;
+		
+			for (FilePath fPath: setOfFilePaths) {
+				if (!fPath.equalsStringPath(filePath)) {
+					contains = false;
+					break;
+				}
+			}
+			
+			return contains;
+		}
 
 		@Override
 		public String toString() {
@@ -156,8 +167,11 @@ public class DriveFilePathSearchDtos {
 			filePathCollections.add(filePathCollection);
 		}
 
-		public boolean checkFilePathExists(List<String> filePathOfDirectoryNames) {
+		public boolean checkFilePathExists(List<String> searchFilePath) {
 			boolean exists = false;
+			
+			String searchFileName = searchFilePath.get(searchFilePath.size() - 1);
+			
 			
 			return exists;
 		}
