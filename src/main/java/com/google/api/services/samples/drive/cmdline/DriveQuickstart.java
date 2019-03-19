@@ -14,10 +14,9 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathQuery;
 import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchDtos.FilePathsSearchResult;
-import com.google.api.services.samples.drive.cmdline.queries.DriveFilePathSearchQuery;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -86,26 +86,24 @@ public class DriveQuickstart {
 //        	logger.info(String.format("listing child items of folderName: %s folderId: %s", parentFolder.getName(), parentFolder.getId()));
 //            outputListOfFileResults(childItems);
 //        });
-                  
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-		DriveFilePathSearchQuery recursiveSearch1 = new DriveFilePathSearchQuery(service, "identicalFile");
-		FilePathsSearchResult result = recursiveSearch1.getFilePathsSearchResult();
-		
-		logger.info(result.getFileResults().get(0).toString());
-		
-		DriveFilePathSearchQuery recursiveSearch = new DriveFilePathSearchQuery(service, "differentFile");
-		recursiveSearch.getFilePathsSearchResult();
+                          
 
+		String[] filePathArray = { "My Drive", "folderA1", "folderB1", "folderC1", "folderD", "identicalFile" };
+		String[] filePathArray2 = { "My Drive", "folderA2", "folderB2", "folderC2", "folderD", "identicalFile" };
+		String[] filePathArray3 = { "My Drive", "folderA1", "folderB1", "folderC1", "folderE1", "differentFile" };
+		String[] filePathArray4 = { "My Drive", "folderA2", "folderB2", "folderC2", "folderE2", "differentFile" };
 
-//		checkFilePath_1(recursiveSearch);
-//		checkFilePath_2(recursiveSearch);
-//		checkFilePath_3(recursiveSearch);
-//		checkFilePath_4(recursiveSearch);
-//		checkFilePath_5_illegalArg(recursiveSearch);
-		
-        stopWatch.stop();
-        System.out.println("Time: " + stopWatch.getTime());
+		DriveFilePathQuery identicalFileQuery = new DriveFilePathQuery(service, "identicalFile");
+		FilePathsSearchResult identicalFileResult = identicalFileQuery.getFilePathsSearchResult();
+
+		DriveFilePathQuery differentFileQuery = new DriveFilePathQuery(service, "differentFile");
+		FilePathsSearchResult differentFileResult = differentFileQuery.getFilePathsSearchResult();
+
+		checkExists(identicalFileResult, filePathArray);
+		checkExists(identicalFileResult, filePathArray2);
+		checkExists(differentFileResult, filePathArray3);
+		checkExists(differentFileResult, filePathArray4);
+
 	}
     
 	private static List<File> sanityCheck(Drive service) throws IOException {
@@ -117,91 +115,10 @@ public class DriveQuickstart {
         List<File> files = result.getFiles();
         return files;
 	}
-	
-    private static void outputListOfFileResults(List<File> files) {
-        if (files == null || files.isEmpty()) {
-        	logger.info("No results.");
-        } else {
-            for (File file : files) {
-            	logger.info(String.format("file.getName: %s getId: %s", file.getName(), file.getId()));
-            }
-		}
-    }
-    
-    /*
-	public static void checkFilePath_1(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
-		Queue<String> queue = new LinkedList<String>();
-		queue.offer("identicalFile");
-		queue.offer("folderC1");
-		queue.offer("folderB1");
-		queue.offer("folderA1");
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
-        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 1 //////////");
-	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
-		logger.info("found " + found);
+	    
+	public static void checkExists(FilePathsSearchResult result, String[] filePathArray) {
+		List<String> filePathList = Arrays.asList(filePathArray);
+	    boolean found = result.checkFilePathExists(filePathList);
+		logger.info(String.format("FilePath: [%s] exists: %s", String.join("]/[", filePathArray), found));
 	}
-
-	public static void checkFilePath_2(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
-		Queue<String> queue = new LinkedList<String>();
-		queue.offer("identicalFile");
-		queue.offer("folderC2");
-		queue.offer("folderB2");
-		queue.offer("folderA2");
-
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
-        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 2 //////////");
-	    outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
-		logger.info("found " + found);
-	}
-
-	private static void checkFilePath_3(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
-		Queue<String> queue = new LinkedList<String>();
-		queue.offer("differentFile");
-		queue.offer("folderC1");
-		queue.offer("folderB1");
-		queue.offer("folderA1");
-
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
-        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 3 //////////");
-		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
-		logger.info("found " + found);
-	}
-	
-	private static void checkFilePath_4(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
-		Queue<String> queue = new LinkedList<String>();
-		queue.offer("differentFile");
-		queue.offer("folderC2");
-		queue.offer("folderB2");
-		queue.offer("folderA2");
-
-		List<File> pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
-        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 4 //////////");
-		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
-		logger.info("found " + found);
-	}
-	
-	private static void checkFilePath_5_illegalArg(TargetFilePathsDriveQuery recursiveSearch) throws IOException {
-		Queue<String> queue = new LinkedList<String>();
-		queue.offer("Be40-notes-wrong-file-should-throw-illegal-argument-exception");
-		queue.offer("past-safety-messages");
-		queue.offer("Flight club");
-		
-		List<File> pathOfItemsFromTargetFileToRoot = null;
-		
-		try {
-			pathOfItemsFromTargetFileToRoot = recursiveSearch.validateTargetFilePath(queue);
-		} catch (IllegalArgumentException ex) {
-			logger.error(ex.getMessage());
-		}
-		
-        logger.info("////////// CHECKING THAT FILE PATH EXISTS EXAMPLE 5 //////////");
-		outputListOfFileResults(pathOfItemsFromTargetFileToRoot);
-	    boolean found = CollectionUtils.isNotEmpty(pathOfItemsFromTargetFileToRoot);
-		logger.info("found " + found);
-	}
-	*/
 }

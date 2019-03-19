@@ -121,8 +121,8 @@ public class DriveFilePathSearchDtos {
 			boolean contains = false;
 		
 			for (FilePath fPath: setOfFilePaths) {
-				if (!fPath.equalsStringPath(filePath)) {
-					contains = false;
+				if (fPath.equalsStringPath(filePath)) {
+					contains = true;
 					break;
 				}
 			}
@@ -169,10 +169,16 @@ public class DriveFilePathSearchDtos {
 
 		public boolean checkFilePathExists(List<String> searchFilePath) {
 			boolean exists = false;
-			
-			String searchFileName = searchFilePath.get(searchFilePath.size() - 1);
-			
-			
+
+			if (!CollectionUtils.isEmpty(searchFilePath)) {			
+				for (FilePathCollection collection : filePathCollections) {
+					if (collection.containsFilePath(searchFilePath)) {
+						exists = true;
+						break;
+					}
+				}
+			}
+
 			return exists;
 		}
 	}

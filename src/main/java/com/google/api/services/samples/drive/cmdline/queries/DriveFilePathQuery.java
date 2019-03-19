@@ -14,13 +14,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DriveFilePathSearchQuery {
+public class DriveFilePathQuery {
 	protected Drive service = null;
 	protected File rootFolder = null;
 	protected String targetFileName = null;
 	protected FilePathsSearchResult filePathsSearchResult;
 	
-	public DriveFilePathSearchQuery(Drive service, String targetFileName) throws IOException {
+	public DriveFilePathQuery(Drive service, String targetFileName) throws IOException {
 		this.service = service;
 		
 		if (service != null) {
