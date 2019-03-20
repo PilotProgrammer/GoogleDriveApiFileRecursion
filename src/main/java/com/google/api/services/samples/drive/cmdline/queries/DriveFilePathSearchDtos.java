@@ -147,16 +147,16 @@ public class DriveFilePathSearchDtos {
 	}
 
 	public static class FilePathsSearchResult {
-		protected String targetFileName;
+		protected String searchFileName;
 		protected List<FilePathCollection> filePathCollections;
 
-		public FilePathsSearchResult(String targetFileName) {
-			this.targetFileName = targetFileName;
+		public FilePathsSearchResult(String searchFileName) {
+			this.searchFileName = searchFileName;
 			filePathCollections = new ArrayList<FilePathCollection>();
 		}
 
-		public String getTargetFileName() {
-			return targetFileName;
+		public String getSearchFileName() {
+			return searchFileName;
 		}
 
 		public List<FilePathCollection> getFileResults() {
@@ -180,6 +180,21 @@ public class DriveFilePathSearchDtos {
 			}
 
 			return exists;
+		}
+		
+		@Override
+		public String toString() {
+			String baseMessageFormat = "///////////////************ %s %s for searchFileName: %s ************/////////////// \n";
+			String startMessage = String.format(baseMessageFormat + "setOfFilePaths: ", "START",
+					this.getClass().getSimpleName(), searchFileName);
+			StringBuilder sb = new StringBuilder(startMessage);
+			for (FilePathCollection filePathCollection : filePathCollections) {
+				sb.append(filePathCollection.toString());
+			}
+			String endMessage = String.format(baseMessageFormat, "END",
+					this.getClass().getSimpleName(), searchFileName);
+			sb.append(endMessage + "\n");
+			return sb.toString();
 		}
 	}
 }
